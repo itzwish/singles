@@ -22,7 +22,7 @@ const chat = useChatStore()
 const auth = useAuthStore()
 const { currentCharacter, messages, isStreaming, streamingContent,
         companionMode, companionPayload, companionPlaying } = storeToRefs(chat)
-const { userAvatar, showApiKeyWarning } = storeToRefs(auth)
+const { userAvatar } = storeToRefs(auth)
 
 // "Seen" receipt: shown below the last user bubble after read_delay_ms fires
 const seenVisible = ref(false)
@@ -218,16 +218,7 @@ async function deleteCurrentConv() {
     </template>
 
     <!-- API key warning dialog -->
-    <div v-if="showApiKeyWarning" class="api-key-overlay" @click.self="auth.dismissApiKeyWarning()">
-      <div class="api-key-dialog">
-        <h3>No API key yet</h3>
-        <p>Add your own API key to unlock chat and character generation.</p>
-        <div class="dialog-actions">
-          <button class="dialog-btn cancel" @click="auth.dismissApiKeyWarning()">Maybe later</button>
-          <button class="dialog-btn confirm" @click="auth.dismissApiKeyWarning(); router.push('/profile')">Set it up</button>
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 

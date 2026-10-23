@@ -230,7 +230,12 @@ def _ai_provider() -> str:
 
 
 def _ollama_client(api_key: str | None) -> OllamaEngine | None:
-    """Return an Ollama client for the shared (no personal key) path."""
+    """Return an Ollama client for the shared (no personal key) path.
+
+    A personal key is an account credential, so it never falls back to the
+    shared Ollama account. When only the shared key is set the community's
+    Ollama instance answers for everyone who has not supplied their own.
+    """
     if api_key:
         return None
     return OllamaEngine(
@@ -394,10 +399,25 @@ class EnhancedAIEngine:
     """Gemini-backed AI engine."""
 
     def _get_client(self, api_key: str | None = None) -> genai.Client:
-        """Build a Gemini client, preferring a per-user key over the global one."""
-        key = api_key or settings.gemini_api_key
+        """Build a Gemini client.
+
+        Precedence: per-user key > shared server key.
+        A user who has not supplied their own key falls back to the
+        server's shared key automatically; the key itself is never asked
+        for in the UI unless the user explicitly wants to add one.
+        """
+        if api_key:
+            return genai.Client(
+                api_key=api_key,
+                http_options=types.HttpOptions(base_url=settings.gemini_base_url),
+            )
+        if settings.gemini_api_key:
+            return genai.Client(
+                api_key=settings.gemini_api_key,
+                http_options=types.HttpOptions(base_url=settings.gemini_base_url),
+            )
         return genai.Client(
-            api_key=key,
+            api_key=None,
             http_options=types.HttpOptions(base_url=settings.gemini_base_url),
         )
 
@@ -408,9 +428,12 @@ class EnhancedAIEngine:
     async def _generate(self, *, model: str, contents, config, api_key: str | None = None):
         """Run one paced, quota-checked Gemini request with a single retry."""
         client = self._get_client(api_key)
-        # The pacing guard protects the shared key's quota. A user who brings
-        # their own key has their own limits, so it is not throttled here.
-        shared = not api_key
+        # The pacing guard protects the shared key's quota. A user who has
+        # supplied their own key has their own limits, so it is not throttled
+        # here. A user who relies on the shared key is throttled by it so a
+        # single header does not burn the whole community's quota.
+        client_key = api_key or settings.gemini_api_key
+        shared = bool(client_key)
         attempt = 0
         while True:
             if shared:
@@ -630,7 +653,12 @@ class EnhancedAIEngine:
                     temperature=settings.gemini_temperature,
                     **_thinking_kwargs(model),
                 )
-                shared = not api_key
+                # The pacing guard protects the shared key's quota. A user who
+                # has their own key is not throttled here; a user who relies on
+                # the shared key shares its limits so one header cannot burn
+                # the community's quota.
+                client_key = api_key or settings.gemini_api_key
+                shared = bool(client_key)
                 stream = None
                 for attempt in range(2):
                     if shared:
@@ -656,7 +684,7 @@ class EnhancedAIEngine:
                 return
             except genai_errors.APIError as e:
                 err = _classify_gemini_error(e)
-                if err.code == "insufficient_balance" and not api_key:
+                if err.code == "insufficient_balance" and shared:
                     cooldown, exact = _cooldown_for(e)
                     _quota.penalise(cooldown)
                     logger.warning(

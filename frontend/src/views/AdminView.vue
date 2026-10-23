@@ -157,10 +157,8 @@ const sysSettings = ref({
   ollama_fallback_models: '',
   vision_enabled: true,
   vision_model: '',
-  gemini_api_key: '',
   gemini_model: '',
   ollama_base_url: '',
-  ollama_api_key: '',
   ollama_model: '',
   ollama_vision_model: '',
 })

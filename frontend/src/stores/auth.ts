@@ -16,7 +16,6 @@ export const useAuthStore = defineStore('auth', () => {
   const hasApiKey = ref(false)
   const apiBaseUrl = ref<string | null>(null)
   const apiModel = ref<string | null>(null)
-  const showApiKeyWarning = ref(false)
   const userAvatarVersion = ref(0)
 
   // Clerk state, read through the app-level bridge so it stays reactive
@@ -127,13 +126,5 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin.value = false
   }
 
-  function promptApiKey() {
-    showApiKeyWarning.value = true
-  }
-
-  function dismissApiKeyWarning() {
-    showApiKeyWarning.value = false
-  }
-
-  return { guestName, userAvatar, userEmail, authChecked, sessionValid, clerkSignedIn, legacySignedIn, isLoggedIn, isAdmin, hasToken, hasApiKey, apiBaseUrl, apiModel, showApiKeyWarning, userAvatarVersion, getUserAvatarUrl, checkAuth, loadUserInfo, updateProfile, logout, promptApiKey, dismissApiKeyWarning }
+  return { guestName, userAvatar, userEmail, authChecked, sessionValid, clerkSignedIn, legacySignedIn, isLoggedIn, isAdmin, hasToken, hasApiKey, apiBaseUrl, apiModel, userAvatarVersion, getUserAvatarUrl, checkAuth, loadUserInfo, updateProfile, logout }
 })

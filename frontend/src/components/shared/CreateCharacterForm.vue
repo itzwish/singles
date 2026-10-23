@@ -111,7 +111,7 @@ async function onGenerate() {
     error.value = 'Describe the character you want first'
     return
   }
-  if (!auth.hasApiKey) { auth.promptApiKey(); return }
+  if (!auth.hasApiKey) { return }
   error.value = ''
   generating.value = true
   try {
@@ -183,7 +183,7 @@ async function onAnalyzeChat() {
     error.value = 'Paste or upload a chat log first'
     return
   }
-  if (!auth.hasApiKey) { auth.promptApiKey(); return }
+  if (!auth.hasApiKey) { return }
   error.value = ''
   analyzing.value = true
   try {
@@ -607,18 +607,6 @@ const expr = computed(() => profile.value.expression_style || {})
     </template>
   </form>
 
-  <!-- API key warning dialog -->
-  <div v-if="auth.showApiKeyWarning" class="api-key-overlay" @click.self="auth.dismissApiKeyWarning()">
-    <div class="api-key-dialog">
-      <div class="dialog-icon">🔑</div>
-      <h3>No API key yet</h3>
-      <p>Add your own API key to use AI chat, character generation and everything else.</p>
-      <div class="dialog-actions">
-        <button class="dialog-btn cancel" @click="auth.dismissApiKeyWarning()">Maybe later</button>
-        <button class="dialog-btn confirm" @click="auth.dismissApiKeyWarning()">Got it</button>
-      </div>
-    </div>
-  </div>
 </template>
 
 <style scoped>

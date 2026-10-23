@@ -55,9 +55,10 @@ def load_system_config():
         if key not in data or not hasattr(settings, key):
             continue
         value = data[key]
-        # A blank stored value means "not configured here", so the value from
-        # the environment is kept instead of being wiped out.
-        if value in (None, "") and getattr(settings, key, None):
+        # Blank stored values mean "not configured here" — keep the value from
+        # the environment (GEMINI_API_KEY, OLLAMA_API_KEY, etc.) instead of
+        # wiping it out with an empty string from the JSON file.
+        if value in (None, ""):
             continue
         _overrides[key] = value
         setattr(settings, key, value)
@@ -73,6 +74,10 @@ def update_system_config(data: dict) -> dict:
     for key in DEFAULTS:
         if key in data and hasattr(settings, key):
             val = data[key]
+            # Blank values are never persisted: a key set in .env (e.g.
+            # GEMINI_API_KEY) must survive an admin clearing its field.
+            if val in (None, ""):
+                continue
             if isinstance(DEFAULTS[key], bool) and not isinstance(val, bool):
                 val = str(val).lower() in ("true", "1", "yes")
             _overrides[key] = val

@@ -103,10 +103,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function sendCompanionMessage(text: string, image?: string | null) {
     const auth = useAuthStore()
-    if (!auth.hasApiKey) {
-      auth.promptApiKey()
-      return
-    }
+    if (!auth.hasApiKey) return
     if (!currentConversation.value) return
 
     // Cancel any pending idle tick since the user just sent a message
@@ -587,10 +584,7 @@ export const useChatStore = defineStore('chat', () => {
 
   function sendMessage(text: string, image?: string | null) {
     const auth = useAuthStore()
-    if (!auth.hasApiKey) {
-      auth.promptApiKey()
-      return
-    }
+    if (!auth.hasApiKey) return
     // Show the user's message in the UI right away
     messages.value.push({
       id: genUUID(),

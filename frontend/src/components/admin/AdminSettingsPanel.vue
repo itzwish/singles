@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { Palette, Save, Cpu, Cloud } from 'lucide-vue-next'
 
 export interface SystemSettings {
@@ -9,10 +9,8 @@ export interface SystemSettings {
   ollama_fallback_models: string
   vision_enabled: boolean
   vision_model: string
-  gemini_api_key: string
   gemini_model: string
   ollama_base_url: string
-  ollama_api_key: string
   ollama_model: string
   ollama_vision_model: string
 }
@@ -29,9 +27,6 @@ const emit = defineEmits<{
 
 const local = reactive<SystemSettings>({ ...props.settings })
 watch(() => props.settings, (v) => Object.assign(local, v))
-
-const showVisionKeys = ref(false)
-const showOllamaKey = ref(false)
 
 function emitToggle(key: 'vision_enabled' | 'ai_fallback_enabled') {
   local[key] = !local[key]
@@ -94,16 +89,10 @@ function selectProvider(provider: 'gemini' | 'ollama') {
             <label>Gemini fallback models (comma separated)</label>
             <input type="text" v-model="local.gemini_fallback_models" placeholder="gemini-3-flash, gemini-flash-latest" />
           </div>
-          <div class="field">
-            <label>Gemini API key</label>
-            <div class="key-row">
-              <input :type="showVisionKeys ? 'text' : 'password'" v-model="local.gemini_api_key" placeholder="Shared Gemini key" />
-              <button class="eye-btn" @click="showVisionKeys = !showVisionKeys">
-                <EyeOff v-if="showVisionKeys" :size="14" />
-                <Eye v-else :size="14" />
-              </button>
-            </div>
-          </div>
+          <p class="hint">
+            The API key lives in the shared server configuration and is applied to every
+            chat. Users who add their own key in their profile keep using it as usual.
+          </p>
         </div>
       </div>
 
@@ -117,16 +106,7 @@ function selectProvider(provider: 'gemini' | 'ollama') {
             <label>Base URL</label>
             <input type="text" v-model="local.ollama_base_url" placeholder="https://ollama.com/v1" />
           </div>
-          <div class="field">
-            <label>API Key</label>
-            <div class="key-row">
-              <input :type="showOllamaKey ? 'text' : 'password'" v-model="local.ollama_api_key" placeholder="Ollama Cloud API key" />
-              <button class="eye-btn" @click="showOllamaKey = !showOllamaKey">
-                <EyeOff v-if="showOllamaKey" :size="14" />
-                <Eye v-else :size="14" />
-              </button>
-            </div>
-          </div>
+
           <div class="field">
             <label>Model</label>
             <input type="text" v-model="local.ollama_model" placeholder="gpt-oss:120b" />
@@ -142,6 +122,16 @@ function selectProvider(provider: 'gemini' | 'ollama') {
         </div>
       </div>
 
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <Cloud :size="16" />
+          <span>Shared server key</span>
+        </div>
+        <p class="hint">
+          Set the shared Gemini key in the server environment (GEMINI_API_KEY). It is
+          used for every visitor whose profile has no key of its own.
+        </p>
+      </div>
       <div class="settings-card">
         <div class="settings-card-header">
           <Save :size="16" />

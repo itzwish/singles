@@ -13,7 +13,7 @@ import api, { uploadApi } from '@/utils/http'
 const router = useRouter()
 const auth = useAuthStore()
 const chat = useChatStore()
-const { guestName, userAvatar, hasApiKey, apiBaseUrl, apiModel, clerkSignedIn } = storeToRefs(auth)
+const { guestName, userAvatar, clerkSignedIn } = storeToRefs(auth)
 const { characters, memories, consolidating } = storeToRefs(chat)
 
 const editingName = ref(false)
@@ -30,15 +30,6 @@ const editingMemContent = ref('')
 const deletingMemId = ref<string | null>(null)
 
 // API key
-const showApiKey = ref(false)
-const editingApiKey = ref(false)
-const apiKeyInput = ref('')
-const savingApiKey = ref(false)
-const showKeyValue = ref(false)
-const testing = ref(false)
-const testResult = ref<string | null>(null)
-const testOk = ref(false)
-
 // Change password (legacy accounts only — Clerk manages its own credentials)
 const showPwd = ref(false)
 const pwdCurrent = ref('')
@@ -206,99 +197,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function toggleApiKey() {
-  showApiKey.value = !showApiKey.value
-  if (!showApiKey.value) {
-    editingApiKey.value = false
-    apiKeyInput.value = ''
-    showKeyValue.value = false
-  }
-}
 
-function startEditApiKey() {
-  apiKeyInput.value = ''
-  editingApiKey.value = true
-  showKeyValue.value = false
-}
-
-async function saveApiKey() {
-  if (!apiKeyInput.value.trim()) return
-  savingApiKey.value = true
-  try {
-    await auth.updateProfile({ api_key: apiKeyInput.value.trim() })
-    editingApiKey.value = false
-    apiKeyInput.value = ''
-  } catch {
-    // silently fail
-  } finally {
-    savingApiKey.value = false
-  }
-}
-
-function cancelEditApiKey() {
-  editingApiKey.value = false
-  apiKeyInput.value = ''
-}
-
-// Provider presets
-const VENDOR_PRESETS = [
-  { name: 'Google Gemini', base_url: 'https://generativelanguage.googleapis.com', model: 'gemini-1.5-flash' },
-  { name: 'Gemini 1.5 Pro', base_url: 'https://generativelanguage.googleapis.com', model: 'gemini-1.5-pro' },
-  { name: 'Gemini 2.0 Flash', base_url: 'https://generativelanguage.googleapis.com', model: 'gemini-2.0-flash' },
-]
-
-const editingConfig = ref(false)
-const configBaseUrl = ref('')
-const configModel = ref('')
-const selectedVendor = ref('')
-
-function startEditConfig() {
-  configBaseUrl.value = apiBaseUrl.value || ''
-  configModel.value = apiModel.value || ''
-  selectedVendor.value = ''
-  editingConfig.value = true
-}
-
-function selectVendor(preset: typeof VENDOR_PRESETS[number]) {
-  configBaseUrl.value = preset.base_url
-  configModel.value = preset.model
-  selectedVendor.value = preset.name
-}
-
-async function saveConfig() {
-  savingApiKey.value = true
-  try {
-    await auth.updateProfile({
-      api_base_url: configBaseUrl.value.trim() || undefined,
-      api_model: configModel.value.trim() || undefined,
-    })
-    editingConfig.value = false
-  } finally {
-    savingApiKey.value = false
-  }
-}
-
-function cancelEditConfig() {
-  editingConfig.value = false
-}
-
-async function testConnection() {
-  testing.value = true
-  testResult.value = null
-  try {
-    const { data } = await api.post<{ status: string; model: string; base_url: string }>('/users/me/test-api')
-    testOk.value = true
-    testResult.value = `Connected (${data.model})`
-    setTimeout(() => { testResult.value = null }, 5000)
-    return data
-  } catch (e: any) {
-    testOk.value = false
-    testResult.value = e.response?.data?.detail || "Couldn't connect. Check your settings"
-    setTimeout(() => { testResult.value = null }, 8000)
-  } finally {
-    testing.value = false
-  }
-}
 </script>
 
 <template>
@@ -348,130 +247,7 @@ async function testConnection() {
         <p class="profile-hint">Tap the photo to change it, or the pencil to change your username</p>
       </div>
 
-      <!-- API key -->
-      <div class="card api-key-card" @click="!showApiKey && (showApiKey = true)">
-        <div class="card-row" @click="toggleApiKey">
-          <div class="card-row-left">
-            <Key :size="18" />
-            <span>API Key</span>
-            <span v-if="hasApiKey" class="api-badge">Added</span>
-            <span v-else class="api-badge empty">Not set</span>
-          </div>
-          <ChevronRight :size="18" class="chevron" :class="{ open: showApiKey }" />
-        </div>
-        <p class="mem-entry-hint">Add your API key — without one, AI features stay off</p>
 
-        <div v-if="showApiKey" class="api-key-panel" @click.stop>
-          <!-- Key setup -->
-          <template v-if="!editingApiKey">
-            <div v-if="hasApiKey" class="api-key-row">
-              <div class="api-key-display">
-                <span v-if="showKeyValue" class="api-key-value">••••••••••••••••  (stored encrypted)</span>
-                <span v-else class="api-key-masked">••••••••••••</span>
-                <button class="toggle-key-btn" @click="showKeyValue = !showKeyValue">
-                  <Eye v-if="!showKeyValue" :size="14" />
-                  <EyeOff v-else :size="14" />
-                </button>
-              </div>
-              <button class="change-key-btn" @click="startEditApiKey">Replace</button>
-            </div>
-            <div v-else class="api-key-empty">
-              <p>No API key yet, so AI features are unavailable</p>
-              <button class="set-key-btn" @click="startEditApiKey">Add one now</button>
-            </div>
-          </template>
-          <template v-else>
-            <div class="api-key-edit">
-              <input
-                v-model="apiKeyInput"
-                type="password"
-                class="api-key-input"
-                placeholder="Paste your Gemini API key"
-                @keyup.enter="saveApiKey"
-                @keyup.escape="cancelEditApiKey"
-              />
-              <div class="api-key-actions">
-                <button class="icon-btn save" :disabled="savingApiKey" @click="saveApiKey">
-                  <Check :size="16" />
-                </button>
-                <button class="icon-btn" @click="cancelEditApiKey">
-                  <X :size="16" />
-                </button>
-              </div>
-            </div>
-            <p class="api-key-hint">Your key is stored encrypted, never in plain text</p>
-          </template>
-
-          <!-- Model configuration -->
-          <div class="config-divider" />
-          <template v-if="!editingConfig">
-            <div class="config-display">
-              <div class="config-item">
-                <span class="config-label">Endpoint</span>
-                <span class="config-value">{{ apiBaseUrl || 'Default' }}</span>
-              </div>
-              <div class="config-item">
-                <span class="config-label">Model</span>
-                <span class="config-value">{{ apiModel || 'Default' }}</span>
-              </div>
-              <button class="change-key-btn" @click="startEditConfig">Edit</button>
-              <button class="test-btn" :disabled="testing" @click="testConnection">
-                {{ testing ? 'Testing...' : 'Test connection' }}
-              </button>
-            </div>
-            <div v-if="testResult" class="test-result" :class="{ ok: testOk, fail: !testOk }">
-              {{ testResult }}
-            </div>
-          </template>
-          <template v-else>
-            <!-- Quick provider presets -->
-            <div class="vendor-presets">
-              <span class="config-label">Quick select</span>
-              <div class="vendor-chips">
-                <button
-                  v-for="p in VENDOR_PRESETS"
-                  :key="p.name"
-                  class="vendor-chip"
-                  :class="{ active: selectedVendor === p.name }"
-                  @click="selectVendor(p)"
-                >{{ p.name }}</button>
-              </div>
-            </div>
-            <div class="config-edit">
-              <div class="config-field">
-                <span class="config-label">Endpoint</span>
-                <input
-                  v-model="configBaseUrl"
-                  class="config-input"
-                  placeholder="https://generativelanguage.googleapis.com"
-                />
-              </div>
-              <div class="config-field">
-                <span class="config-label">Model</span>
-                <input
-                  v-model="configModel"
-                  class="config-input"
-                  placeholder="gemini-1.5-flash"
-                />
-              </div>
-              <div class="config-actions">
-                <button class="icon-btn save" :disabled="savingApiKey" @click="saveConfig">
-                  <Check :size="16" />
-                </button>
-                <button class="icon-btn" @click="cancelEditConfig">
-                  <X :size="16" />
-                </button>
-                <button class="test-btn" :disabled="testing" @click="testConnection">
-                  {{ testing ? 'Testing...' : 'Test connection' }}
-                </button>
-              </div>
-              <div v-if="testResult" class="test-result" :class="{ ok: testOk, fail: !testOk }">
-                {{ testResult }}
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
 
       <!-- Account & security -->
       <div v-if="clerkSignedIn" class="card password-card" @click="openClerkProfile">
