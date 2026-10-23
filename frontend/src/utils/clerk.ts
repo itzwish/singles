@@ -28,8 +28,15 @@ const userState = shallowRef<UserState | null>(null)
  * router guards.
  */
 export function installClerkBridge(app: App): void {
-  authState.value = app.runWithContext(() => useAuth())
-  userState.value = app.runWithContext(() => useUser())
+  try {
+    authState.value = app.runWithContext(() => useAuth())
+    userState.value = app.runWithContext(() => useUser())
+  } catch {
+    // Clerk plugin not installed (e.g. missing VITE_CLERK_PUBLISHABLE_KEY).
+    // The rest of the app falls back to legacy auth / guest mode.
+    authState.value = null
+    userState.value = null
+  }
 }
 
 /** The raw reactive Clerk auth state, or null before the bridge is installed. */
