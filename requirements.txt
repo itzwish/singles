@@ -23,4 +23,5 @@ upstash-redis>=1.1
 python-dotenv>=1.0
 structlog>=24.0
 
-# Vercel natively supports FastAPI — no Mangum needed.
+# Vercel serverless entrypoint (Mangum adapts ASGI to the Lambda handler)
+mangum>=0.17
