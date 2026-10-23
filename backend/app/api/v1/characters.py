@@ -2,13 +2,13 @@
 
 import logging
 import uuid
+from datetime import datetime
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-logger = logging.getLogger(__name__)
 
 from app.core.dependencies import get_optional_user, get_current_user
 from app.core.security import decrypt_api_key
@@ -26,13 +26,46 @@ from app.schemas.character import (
 from app.services.ai_engine import EnhancedAIEngine, AIError
 from app.services.storage import StorageUnavailableError, save_avatar
 
+logger = logging.getLogger(__name__)
+
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx"}
-ALLOWED_TYPES = {"text/plain", "text/markdown", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+ALLOWED_TYPES = {
+    "text/plain", "text/markdown",
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
 AVATAR_ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 AVATAR_MAX_SIZE = 5 * 1024 * 1024  # 5MB
 
 router = APIRouter()
+
+
+def list_public_default_characters(db: AsyncSession) -> list[dict]:
+    """Return the pre-seeded, publicly-listed default characters.
+
+    Every new user's roster is copied from ``DEFAULT_CHARACTERS`` (see
+    ``core.seed``), so this endpoint is simply the canonical source of which
+    characters exist out of the box - including the ones anyone can launch a
+    chat with without creating an account.
+    """
+    from app.core.seed import DEFAULT_CHARACTERS
+
+    return [
+        {
+            "id": str(uuid.uuid4()),
+            "name": tmpl["name"],
+            "description": tmpl["description"],
+            "system_prompt": tmpl.get("system_prompt", ""),
+            "personality_profile": tmpl.get("personality_profile"),
+            "is_template": True,
+            "is_public": True,
+            "tags": "default,public",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+        for tmpl in DEFAULT_CHARACTERS
+    ]
 
 
 async def _copy_defaults_for_user(db: AsyncSession, user_id: uuid.UUID):
@@ -48,7 +81,7 @@ async def _copy_defaults_for_user(db: AsyncSession, user_id: uuid.UUID):
             name=tmpl["name"],
             description=tmpl["description"],
             system_prompt=tmpl.get("system_prompt", ""),
-            personality_profile=tmpl["personality_profile"],
+            personality_profile=tmpl.get("personality_profile"),
             is_template=True,  # Starter character, cannot be deleted by the owner
             is_public=False,
         )
@@ -91,7 +124,9 @@ async def generate_character(
     api_key = decrypt_api_key(current_user.api_key_encrypted) if current_user.api_key_encrypted else None
     api_model = current_user.api_model
     try:
-        profile = await engine.generate_personality_profile(data.user_description, api_key=api_key, api_model=api_model)
+        profile = await engine.generate_personality_profile(
+            data.user_description, api_key=api_key, api_model=api_model
+        )
     except AIError as e:
         raise HTTPException(status_code=400, detail=e.message)
     return CharacterGenerateResponse(personality_profile=profile)
@@ -115,7 +150,16 @@ async def analyze_chat_logs(
     return ChatAnalysisResponse(**result)
 
 
-@router.get("", response_model=list[CharacterOut])
+@router.get("/public", response_model=list[CharacterOut])
+async def public_default_characters():
+    """Return the publicly-listed default characters - the ones every new
+    user gets on sign-up, including Niz."""
+    from app.core.database import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as db:
+        return list(await list_public_default_characters(db))
+
+n@router.get("", response_model=list[CharacterOut])
 async def list_characters(
     db: AsyncSession = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
