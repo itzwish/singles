@@ -66,12 +66,13 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         await loadUserInfo()
         sessionValid.value = true
-        authChecked.value = true
-        return true
       } catch {
-        authChecked.value = true
-        return false
+        // The API may be unavailable (e.g. during deployment).
+        // Trust Clerk's client-side session so the app still loads.
+        sessionValid.value = true
       }
+      authChecked.value = true
+      return sessionValid.value
     }
 
     if (hasLegacyToken()) {

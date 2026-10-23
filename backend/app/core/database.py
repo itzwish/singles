@@ -26,7 +26,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Used when DATABASE_URL is unset (local development).
-DEFAULT_DATABASE_URL = "sqlite:///./dev.db"
+DEFAULT_DATABASE_URL = "sqlite+aiosqlite:///./dev.db"
 
 
 def normalize_database_url(url: str | None) -> str:

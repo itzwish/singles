@@ -154,8 +154,8 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/health")
-    def health():
-        return {"status": "ok"}
+    def health(request: Request):
+        return {"status": "ok", "path": request.url.path}
 
     @app.get("/")
     def root():
@@ -172,7 +172,7 @@ def create_app() -> FastAPI:
     # REST routes
     from app.api.v1.router import api_router
 
-    app.include_router(api_router, prefix="/api/v1")
+    app.include_router(api_router, prefix="/v1")
 
     # WebSocket routes
     from app.api.v1.ws import router as ws_router
