@@ -1,0 +1,59 @@
+# Easy Single — Fly.io deployment configuration
+#
+#   fly launch --no-deploy                  # first time, to create the app
+#   fly postgres create                     # creates DATABASE_URL
+#   fly volumes create easy_single_data 1   # only if staying on SQLite
+#   fly secrets set GEMINI_API_KEY=... JWT_SECRET=...
+#   fly deploy
+#
+# The frontend is NOT built here — it deploys separately (e.g. to Vercel).
+# Point ALLOWED_ORIGINS at that frontend's origin.
+
+app = "easy-single"
+primary_region = "iad"
+
+# Built from the repository root; the Dockerfile lives under backend/.
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  APP_PORT = "8000"
+  DEBUG = "false"
+  # Add your Vercel frontend origin, e.g. https://easy-single.vercel.app
+  ALLOWED_ORIGINS = "http://localhost:5173"
+  GEMINI_MODEL = "gemini-1.5-flash"
+  VISION_ENABLED = "true"
+  VISION_MODEL = "gemini-1.5-flash"
+  # Overridden automatically by `fly postgres attach`. The postgres:// scheme
+  # is normalised to postgresql:// at startup (see app/core/database.py).
+  DATABASE_URL = "sqlite:////data/dev.db"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Streaming replies can run long, so allow generous concurrency.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 60
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "20s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+# Persistent volume so the SQLite dev database survives restarts. Not needed
+# when you attach Fly Postgres.
+[[mounts]]
+  source = "easy_single_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

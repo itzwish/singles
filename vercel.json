@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "(cd frontend && npm install) && pip install -r requirements.txt",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.12",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!api/|assets/|favicon.ico|favicon.svg|favicon.png|robots.txt|manifest.json|bg.png).*)", "destination": "/index.html" }
+  ]
+}

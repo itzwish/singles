@@ -1,0 +1,14 @@
+[
+  {
+    "username": "Guest",
+    "email": "guest@easy-single.local",
+    "status": "skipped",
+    "reason": "guest account"
+  },
+  {
+    "username": "Wish",
+    "email": "na376126@gmail.com",
+    "status": "linked",
+    "clerk_user_id": "user_3KzoopvQIi0sO8mInp4dWfjB5mI"
+  }
+]

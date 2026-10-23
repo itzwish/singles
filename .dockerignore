@@ -1,0 +1,40 @@
+# Git
+.git/
+.gitignore
+
+# Node (the frontend is built by Vercel, not by the backend image)
+node_modules/
+frontend/node_modules/
+frontend/src/
+frontend/public/
+frontend/dist/
+frontend/.vite/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Local dev artefacts
+.env
+.env.*
+!.env.example
+*.db
+*.log
+*.sqlite3
+
+# Deployment
+.vercel/
+.terraform/
+
+# IDE / OS
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
+
+# Docs (not needed at runtime)
+*.md

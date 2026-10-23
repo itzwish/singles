@@ -1,0 +1,63 @@
+# Environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite3
+data/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+.vite/
+
+# Build artifacts
+frontend-dist.tar.gz
+vf-frontend.tar.gz
+
+# Docker
+.docker/
+
+# Plans
+.claude/plans/
+
+# Sensitive
+*.pem
+*.key
+avatars/
+backend/app/static/generated/
+backend/system_config.json
+
+# Dev artifacts — screenshots, snapshots, local build outputs
+frontend_screenshot.png
+root_screenshot*.png
+signin_screenshot*.png
+frontend_index_snapshot.html
+frontend/dist/
+frontend/.vite/
+backend/dev.db
+backend/.env

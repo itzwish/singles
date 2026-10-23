@@ -1,0 +1,103 @@
+/* ═══════════════════════════════════════
+   Easy Single — Design Tokens
+   ═══════════════════════════════════════ */
+
+:root {
+  /* ── Palette · Sakura Pink ── */
+  --color-primary: #FF7DAF;
+  --color-primary-light: #FFB8D4;
+  --color-primary-dark: #E0669A;
+  /* Deep enough for white text on a filled action (5.7:1) */
+  --color-action: #B23A66;
+  --color-action-hover: #972E55;
+  --color-accent: #C4A1FF;
+  --color-accent-light: #DFC8FF;
+  --color-gold: #FFD4A8;
+  --color-gold-light: #FFE8D0;
+
+  /* ── Backgrounds ── */
+  --color-bg: #FFF5F8;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #FFF0F4;
+  --color-sidebar: #FFF8FA;
+  --color-sakura: #FFE8F0;
+  --color-sakura-light: #FFF0F5;
+
+  /* ── Text ── */
+  --color-text: #4A2535;
+  --color-text-secondary: #8B5A6B;
+  --color-text-muted: #C495A8;
+  --color-text-inverse: #FFFFFF;
+
+  /* ── Border ── */
+  --color-border: #F5D0DA;
+  --color-border-strong: #E8B0C0;
+
+  /* ── Bubbles ──
+     The user's bubble is the strong one, so it needs a fill deep enough for
+     white text (5.7:1); the companion answers on her own pale field. */
+  --color-bubble-user-solid: #B23A66;
+  --color-bubble-ai: #FFE9F0;
+  --color-bubble-ai-ink: #A83D68;
+  --color-bubble-ai-hover: #FFDCE8;
+
+  /* ── States ──
+     The pastel fills carry the signal; the ink pair is what makes a label on
+     that fill readable (the fills alone are 1.8-2.6:1 against white). */
+  --color-success: #7EC8A0;
+  --color-success-ink: #2F6B45;
+  --color-success-tint: #E4F4EA;
+  --color-error: #E8808A;
+  --color-error-ink: #9B2C3C;
+  --color-error-tint: #FBE9EC;
+  --color-warning: #F0C080;
+  --color-warning-ink: #8A5310;
+  --color-warning-tint: #FBEFDD;
+
+  /* ── Gradients ── */
+  --sakura-gradient: linear-gradient(180deg, #FFF5F8 0%, #FFE8F0 50%, #F5E0F0 100%);
+  --avatar-gradient-1: linear-gradient(135deg, #FF7DAF, #C4A1FF);
+  --avatar-gradient-2: linear-gradient(135deg, #FFB8D4, #FFD4A8);
+  --avatar-gradient-3: linear-gradient(135deg, #C4A1FF, #A8D8F0);
+  --header-gradient: linear-gradient(90deg, rgba(255,245,248,0.95), rgba(255,232,240,0.95));
+
+  /* ── Typography ── */
+  --font-heading: 'Varela Round', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  /* ── Radius · Soft & Rounded ── */
+  --radius-xs: 8px;
+  --radius-sm: 14px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --radius-full: 9999px;
+
+  /* ── Shadows · Soft Rose ── */
+  --shadow-sm: 0 1px 4px rgba(255,125,175,0.06);
+  --shadow-md: 0 2px 12px rgba(255,125,175,0.08);
+  --shadow-lg: 0 4px 24px rgba(255,125,175,0.12);
+
+  /* ── Easing · Soft & Bouncy ── */
+  --ease-out: cubic-bezier(0.25, 0.8, 0.25, 1.2);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration: 250ms;
+  --duration-slow: 450ms;
+
+  /* ── Layout ── */
+  --header-h: 56px;
+  --char-panel-w: 320px;
+  --input-h: 80px;
+}
+
