@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "(cd frontend && npm install) && pip install -r requirements.txt",
+  "installCommand": "(cd frontend && npm install) && pip install --break-system-packages -r requirements.txt",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
