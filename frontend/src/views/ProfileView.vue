@@ -88,7 +88,15 @@ onMounted(async () => {
 })
 
 function goBack() {
-  router.back()
+  // A profile opened from inside the app should return to the previous screen.
+  // When it was opened directly (or the browser history has no in-app entry),
+  // router.back() can leave the SPA entirely. Keep a stable Home fallback.
+  const previousPath = window.history.state?.back
+  if (typeof previousPath === 'string' && previousPath !== router.currentRoute.value.fullPath) {
+    router.back()
+    return
+  }
+  router.replace({ name: 'home' })
 }
 
 function triggerAvatar() {
