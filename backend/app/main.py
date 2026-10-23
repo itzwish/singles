@@ -157,8 +157,8 @@ def create_app() -> FastAPI:
     def health():
         return {"status": "ok"}
 
-    @app.get("/")
-    def root():
+    @app.get("/api")
+    def api_root():
         return {"name": "Easy Single API", "version": "2.0.0", "docs": "/docs", "health": "/health"}
 
     @app.exception_handler(Exception)
@@ -187,6 +187,17 @@ def create_app() -> FastAPI:
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     else:
         logger.warning(f"Static directory not found at {STATIC_DIR}; /static is disabled")
+
+    # Frontend — Vercel promotes frontend/dist/ to the CDN and serves it at /.
+    # SPA routes automatically fall back to index.html. Local-only: skipped when
+    # the directory doesn't exist yet (before `npm run build` runs).
+    try:
+        from pathlib import Path
+        _frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+        if _frontend_dist.is_dir():
+            app.frontend("/", directory=str(_frontend_dist))
+    except AttributeError:
+        pass
 
     return app
 
