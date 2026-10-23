@@ -4,7 +4,9 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.core.dependencies import get_current_user
 from app.core.security import encrypt_api_key, decrypt_api_key, verify_password, hash_password
@@ -55,7 +57,27 @@ async def update_me(
 ):
     """Update the current user's profile"""
     if data.username is not None:
-        current_user.username = data.username
+        username = data.username.strip()
+        if not username:
+            raise HTTPException(status_code=400, detail="Username cannot be empty")
+        if len(username) > 100:
+            raise HTTPException(status_code=400, detail="Username must be 100 characters or fewer")
+
+        # Usernames are displayed and entered as case-insensitive handles. Check
+        # before flushing so the client gets a useful response instead of a
+        # database integrity error when another account already uses the name.
+        existing = await db.execute(
+            select(User.id)
+            .where(
+                func.lower(User.username) == username.lower(),
+                User.id != current_user.id,
+            )
+            .limit(1)
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise HTTPException(status_code=409, detail="That username is already taken")
+
+        current_user.username = username
     if data.avatar_url is not None:
         current_user.avatar_url = data.avatar_url
     if data.api_key is not None:
@@ -64,7 +86,15 @@ async def update_me(
         current_user.api_base_url = data.api_base_url
     if data.api_model is not None:
         current_user.api_model = data.api_model
-    await db.flush()
+    try:
+        await db.flush()
+    except IntegrityError:
+        # A concurrent request can still win between the availability check and
+        # the flush. Convert that race into the same friendly conflict response.
+        await db.rollback()
+        if data.username is not None:
+            raise HTTPException(status_code=409, detail="That username is already taken")
+        raise
     await db.refresh(current_user)
     return _user_to_out(current_user)
 

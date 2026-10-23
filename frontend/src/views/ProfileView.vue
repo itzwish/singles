@@ -18,6 +18,8 @@ const { characters, memories, consolidating } = storeToRefs(chat)
 
 const editingName = ref(false)
 const nameInput = ref('')
+const savingName = ref(false)
+const nameError = ref<string | null>(null)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 const showMemories = ref(false)
@@ -123,18 +125,37 @@ async function uploadAvatar(e: Event) {
 
 function startEditName() {
   nameInput.value = guestName.value
+  nameError.value = null
   editingName.value = true
 }
 
 async function saveName() {
-  if (nameInput.value.trim() && nameInput.value !== guestName.value) {
-    await auth.updateProfile({ username: nameInput.value.trim() })
+  const username = nameInput.value.trim()
+  nameError.value = null
+
+  if (!username) {
+    nameError.value = 'Username cannot be empty'
+    return
   }
-  editingName.value = false
+  if (username === guestName.value) {
+    editingName.value = false
+    return
+  }
+
+  savingName.value = true
+  try {
+    await auth.updateProfile({ username })
+    editingName.value = false
+  } catch (e: any) {
+    nameError.value = e.response?.data?.detail || 'Could not update your username'
+  } finally {
+    savingName.value = false
+  }
 }
 
 function cancelEditName() {
   editingName.value = false
+  nameError.value = null
 }
 
 async function toggleMemories() {
@@ -309,19 +330,22 @@ async function testConnection() {
               v-model="nameInput"
               class="name-input"
               maxlength="12"
+              :disabled="savingName"
+              aria-label="Username"
               @keyup.enter="saveName"
               @keyup.escape="cancelEditName"
             />
-            <button class="icon-btn save" @click="saveName"><Check :size="16" /></button>
-            <button class="icon-btn" @click="cancelEditName"><X :size="16" /></button>
+            <button class="icon-btn save" :disabled="savingName" aria-label="Save username" @click="saveName"><Check :size="16" /></button>
+            <button class="icon-btn" :disabled="savingName" aria-label="Cancel username edit" @click="cancelEditName"><X :size="16" /></button>
           </template>
           <template v-else>
             <span class="profile-name">{{ guestName }}</span>
-            <button class="edit-btn" @click="startEditName"><Edit3 :size="14" /></button>
+            <button class="edit-btn" aria-label="Edit username" @click="startEditName"><Edit3 :size="14" /></button>
           </template>
         </div>
 
-        <p class="profile-hint">Tap the photo to change it, or the pencil to rename yourself</p>
+        <p v-if="nameError" class="name-error" role="alert">{{ nameError }}</p>
+        <p class="profile-hint">Tap the photo to change it, or the pencil to change your username</p>
       </div>
 
       <!-- API key -->
@@ -725,6 +749,17 @@ async function testConnection() {
 }
 .icon-btn:hover { background: var(--color-sakura-light); color: var(--color-text); }
 .icon-btn.save { color: var(--color-success); }
+.icon-btn:disabled,
+.edit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.name-error {
+  margin: 0;
+  color: var(--color-error-ink);
+  background: var(--color-error-tint);
+  border-radius: var(--radius-xs);
+  padding: 5px 9px;
+  font-size: var(--text-xs);
+  text-align: center;
+}
 
 /* ── Chevron ── */
 .chevron {
