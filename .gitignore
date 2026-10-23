@@ -8,7 +8,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-dist/
 build/
 
 # Database
@@ -31,7 +30,6 @@ Thumbs.db
 
 # Node
 node_modules/
-frontend/dist/
 frontend/.vite/
 .vite/
 
@@ -57,7 +55,6 @@ frontend_screenshot.png
 root_screenshot*.png
 signin_screenshot*.png
 frontend_index_snapshot.html
-frontend/dist/
 frontend/.vite/
 backend/dev.db
 backend/.env

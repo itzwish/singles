@@ -2,14 +2,14 @@ import axios from 'axios'
 import { clerkGetToken, clerkIsSignedIn } from './clerk'
 
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: '/v1',
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 })
 
 // Instance used for file uploads (no Content-Type, so the browser sets the multipart boundary itself)
 const uploadApi = axios.create({
-  baseURL: '/api/v1',
+  baseURL: '/v1',
   timeout: 60000,
 })
 
@@ -71,7 +71,7 @@ function addAuthInterceptor(instance: ReturnType<typeof axios.create>) {
         const refreshToken = localStorage.getItem(LEGACY_REFRESH_KEY)
         if (refreshToken) {
           try {
-            const { data } = await axios.post('/api/v1/auth/refresh', { refresh_token: refreshToken })
+            const { data } = await axios.post('/v1/auth/refresh', { refresh_token: refreshToken })
             localStorage.setItem(LEGACY_ACCESS_KEY, data.access_token)
             localStorage.setItem(LEGACY_REFRESH_KEY, data.refresh_token)
             original.headers = original.headers ?? {}
